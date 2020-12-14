@@ -10,12 +10,16 @@ class Node():
         self.split_point = None     # 划分点
         self.attribute_index = None     # 划分属性索引
         self.child = {}     # 子节点字典，key为属性取值，value为node
+        self.is_leaf = False    # 是否为叶节点
+        self.leaf_num = None    # 叶子节点数量
+        self.depth = -1  # 节点深度
 
 
 class DecisionTree():
     def __init__(self, criterion='information gain', pruning=None):
         self.criterion = criterion
         self.pruning = pruning
+        self.tree = None    # 树
 
     def info_entropy(self, y):
         '''
@@ -103,14 +107,21 @@ class DecisionTree():
         node：树节点
         '''
         node = Node()   # 建立节点
+        node.leaf_num = 0
         # 属于同一类别
         if y.nunique() == 1:
+            node.is_leaf = True     # 叶节点
             node.class_ = y.values[0]
+            node.depth = 1  # 深度为1
+            node.leaf_num += 1
             return node
 
         # 样本集为空
         if X.empty:
+            node.is_leaf = True
             node.class_ = y.value_counts().index[0]  # 类别标记为D中样本最多的类
+            node.depth = 1
+            node.leaf_num += 1
             return node
 
         best_attribute, best_purity = self.get_best_attribute(X, y)
@@ -123,8 +134,19 @@ class DecisionTree():
         if len(best_purity) == 1:
             attribute_values = X[best_attribute].unique()
             X_child = X.drop(best_attribute, axis=1)    # 删掉划分列
+
+            max_depth = 0
             for attribute_value in attribute_values:
-                node.child[attribute_value] = self.generate_tree(X_child[X[best_attribute] == attribute_value], y[X[best_attribute] == attribute_value])
+                node.child[attribute_value] = self.generate_tree(
+                    X_child[X[best_attribute] == attribute_value],
+                    y[X[best_attribute] == attribute_value]
+                )
+                # 记录子树最大高度
+                if node.child[attribute_value].depth > max_depth:
+                    max_depth = node.child[attribute_value].depth
+                node.leaf_num += node[attribute_value].leaf_num
+            node.depth = max_depth + 1
+
         # 连续值
         else:
             node.split_point = best_purity[1]    # 划分点
@@ -137,6 +159,8 @@ class DecisionTree():
             y_down = y[X[best_attribute] <= node.split_point]
             node.child[up_part] = self.generate_tree(X_up, y_up)
             node.child[down_part] = self.generate_tree(X_down, y_down)
+            node.leaf_num += (node.child[up_part].leaf_num + node.child[down_part].leaf_num)
+            node.depth = max(node.child[up_part].depth, node.child[down_part].depth) + 1
 
         return node
 
@@ -145,4 +169,4 @@ data = pd.read_csv('E:\Python\机器学习\MachineLearning_Zhouzhihua_ProblemSet
 X = data.iloc[:, :8]
 y = data.iloc[:, -1]
 tree = DecisionTree(criterion='information gain')
-tree.generate_tree(X, y)
+tree.tree = tree.generate_tree(X, y)
