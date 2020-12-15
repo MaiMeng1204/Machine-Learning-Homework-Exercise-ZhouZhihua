@@ -113,6 +113,7 @@ class DecisionTree():
         if y.nunique() == 1:
             node.is_leaf = True     # 叶节点
             node.class_ = y.values[0]
+            node.leaf_num += 1
             node.depth = 1  # 深度为1
             return node
 
@@ -120,6 +121,7 @@ class DecisionTree():
         if X.empty:
             node.is_leaf = True
             node.class_ = y.value_counts().index[0]  # 类别标记为D中样本最多的类
+            node.leaf_num += 1
             node.depth = 1
             return node
 
