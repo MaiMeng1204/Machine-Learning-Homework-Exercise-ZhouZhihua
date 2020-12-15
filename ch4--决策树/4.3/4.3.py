@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import PlotTree as pt
 
 
 class Node():
@@ -113,7 +114,6 @@ class DecisionTree():
             node.is_leaf = True     # 叶节点
             node.class_ = y.values[0]
             node.depth = 1  # 深度为1
-            node.leaf_num += 1
             return node
 
         # 样本集为空
@@ -121,7 +121,6 @@ class DecisionTree():
             node.is_leaf = True
             node.class_ = y.value_counts().index[0]  # 类别标记为D中样本最多的类
             node.depth = 1
-            node.leaf_num += 1
             return node
 
         best_attribute, best_purity = self.get_best_attribute(X, y)
@@ -144,7 +143,7 @@ class DecisionTree():
                 # 记录子树最大高度
                 if node.child[attribute_value].depth > max_depth:
                     max_depth = node.child[attribute_value].depth
-                node.leaf_num += node[attribute_value].leaf_num
+                node.leaf_num += node.child[attribute_value].leaf_num
             node.depth = max_depth + 1
 
         # 连续值
@@ -170,3 +169,4 @@ X = data.iloc[:, :8]
 y = data.iloc[:, -1]
 tree = DecisionTree(criterion='information gain')
 tree.tree = tree.generate_tree(X, y)
+pt.create_plot(tree.tree)
