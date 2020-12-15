@@ -171,4 +171,4 @@ X = data.iloc[:, :8]
 y = data.iloc[:, -1]
 tree = DecisionTree(criterion='information gain')
 tree.tree = tree.generate_tree(X, y)
-pt.create_plot(tree.tree)
+pt.create_plot(tree.tree, '4.3')
