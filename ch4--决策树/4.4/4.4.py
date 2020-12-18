@@ -82,8 +82,8 @@ class DecisionTree():
 
 
 data = pd.read_csv('E:\Python\机器学习\MachineLearning_Zhouzhihua_ProblemSets-master\data\watermelon2_0_Ch.txt', index_col=0)
-train = data.iloc[[1, 2, 3, 6, 7, 10, 14, 15, 16], :]
-test = data.iloc[[4, 5, 8, 9, 11, 12, 13], :]
+train = data.iloc[np.array([1, 2, 3, 6, 7, 10, 14, 15, 16, 17]) - 1, :]
+test = data.iloc[np.array([4, 5, 8, 9, 11, 12, 13]) - 1, :]
 X_train = train.iloc[:, :6]
 y_train = train.iloc[:, -1]
 X_test = test.iloc[:, :6]
