@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import sys
 sys.path.append('..')
-import PlotTree as pt
+# import PlotTree as pt
 
 
 class Node():
@@ -51,27 +51,40 @@ class DecisionTree():
         if self.criterion == 'gini index':
             return self.get_best_split_attribute_gini_index(X, y)
 
-    def generate_tree(self, X, y):
+    def prepruning(self, node, X_train, y_train, X_test, y_test):
+        '''
+        计算剪枝后的准确率
+        '''
+        attribute = node.attribute
+        y_train_split = y_train.groupby(X_train[attribute]).apply(lambda x: x.value_counts().index[0])  # 划分后每个节点的类别取值
+        correct_y = y_test.groupby(X_test[attribute]).apply(lambda x: np.sum(x == y_train_split[x.name]))   # 分类正确的个数
+        accuracy = np.sum(correct_y) / len(y_test)
+        return accuracy
+
+    def generate_tree(self, X_train, y_train, X_test, y_test):
         node = Node()
-        if y.nunique() == 1:
-            node.class_ = y.iloc[0]
+        node.class_ = y_train.value_counts().index[0]
+
+        if y_train.nunique() == 1 or X_train.empty:
             return node
 
-        if X.empty:
-            node.class_ = y.value_counts().index[0]
+        node.attribute, node.purity = self.get_best_split_attribute(X_train, y_train)
+
+        # 不剪枝的准确率
+        current_accuracy = np.mean(y_test == node.class_)
+        # 预剪枝
+        if self.pruning == 'prepruning':
+            pruning_accuracy = self.prepruning(node, X_train, y_train, X_test, y_test)
+        if current_accuracy >= pruning_accuracy:
             return node
 
-        node.is_leaf = False
-        node.leaf_num = 0
-        node.attribute, node.purity = self.get_best_split_attribute(X, y)
-
-        attribute_values = X[node.attribute].unique()
-        X_child = X.drop(node.attribute, axis=1)
+        attribute_values = X_train[node.attribute].unique()
+        X_child = X_train.drop(node.attribute, axis=1)
         max_depth = 0
         for attribute_value in attribute_values:
-            mask = X[node.attribute] == attribute_value
+            mask = X_train[node.attribute] == attribute_value
             X_attribute_value = X_child[mask]
-            y_attribute_value = y[mask]
+            y_attribute_value = y_train[mask]
             node.child[attribute_value] = self.generate_tree(X_attribute_value, y_attribute_value)
             if node.child[attribute_value].depth > max_depth:
                 max_depth = node.child[attribute_value].depth
@@ -89,6 +102,6 @@ y_train = train.iloc[:, -1]
 X_test = test.iloc[:, :6]
 y_test = test.iloc[:, -1]
 
-tree = DecisionTree(criterion='gini index', pruning=None)
-tree.tree = tree.generate_tree(X_train, y_train)
-pt.create_plot(tree.tree, '未剪枝决策树')
+tree = DecisionTree(criterion='gini index', pruning='prepruning')
+tree.tree = tree.generate_tree(X_train, y_train, X_test, y_test)
+pt.create_plot(tree.tree, '预剪枝决策树')
