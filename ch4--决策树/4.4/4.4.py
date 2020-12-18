@@ -91,4 +91,4 @@ y_test = test.iloc[:, -1]
 
 tree = DecisionTree(criterion='gini index', pruning=None)
 tree.tree = tree.generate_tree(X_train, y_train)
-pt.create_plot(tree.tree, '4.4')
+pt.create_plot(tree.tree, '未剪枝决策树')
