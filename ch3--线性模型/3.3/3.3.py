@@ -78,22 +78,23 @@ def logistic_regression(x_hat, y, method, learning_rate, num_iterations):
         return update_parameters_newton(beta, x_hat, y, num_iterations)
 
 
-data = pd.read_csv('watermelon3_0_Ch.csv')
-data = data.iloc[:, 7:]
-data['好瓜'] = data['好瓜'].map(func)
-x = data.iloc[:, :2].values
-y = data.iloc[:, -1].values
-x_hat = np.append(x, np.ones((x.shape[0], 1)), axis=1)
-beta = logistic_regression(x_hat, y, method='newton', learning_rate=0.3, num_iterations=1000)
-# 可视化模型结果
-beta = beta.reshape(-1, 1)
-x1 = np.arange(len(y))
-y1 = sigmoid(np.dot(x_hat, beta))
-lr = linear_model.LogisticRegression(solver='lbfgs', C=1000)  # 注意sklearn的逻辑回归中，C越大表示正则化程度越低。
-lr.fit(x, y)
-lr_beta = np.c_[lr.coef_, lr.intercept_].T
-y2 = sigmoid(np.dot(x_hat, lr_beta))
+if __name__ == '__main__':
+    data = pd.read_csv('watermelon3_0_Ch.csv')
+    data = data.iloc[:, 7:]
+    data['好瓜'] = data['好瓜'].map(func)
+    x = data.iloc[:, :2].values
+    y = data.iloc[:, -1].values
+    x_hat = np.append(x, np.ones((x.shape[0], 1)), axis=1)
+    beta = logistic_regression(x_hat, y, method='newton', learning_rate=0.3, num_iterations=1000)
+    # 可视化模型结果
+    beta = beta.reshape(-1, 1)
+    x1 = np.arange(len(y))
+    y1 = sigmoid(np.dot(x_hat, beta))
+    lr = linear_model.LogisticRegression(solver='lbfgs', C=1000)  # 注意sklearn的逻辑回归中，C越大表示正则化程度越低。
+    lr.fit(x, y)
+    lr_beta = np.c_[lr.coef_, lr.intercept_].T
+    y2 = sigmoid(np.dot(x_hat, lr_beta))
 
-plt.plot(x1, y1, 'r-', x1, y2, 'g--', x1, y, 'b-')
-plt.legend(['predict', 'sklearn_predict', 'true'])
-plt.show()
+    plt.plot(x1, y1, 'r-', x1, y2, 'g--', x1, y, 'b-')
+    plt.legend(['predict', 'sklearn_predict', 'true'])
+    plt.show()
